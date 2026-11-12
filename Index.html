@@ -241,4 +241,96 @@
     }
     .link-btn:active::before,
     .link-btn:focus-visible::before { left: 130%; }
-    .link-b
+    .link-btn:active .arrow,
+    .link-btn:focus-visible .arrow { transform: translateX(6px); color: var(--accent); }
+
+    footer {
+      margin-top: 56px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: rgba(233, 237, 241, 0.22);
+      animation: fade 2s 1.8s var(--ease) both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="glow"></div>
+  <div class="grid-lines"></div>
+  <span class="corner tl"></span>
+  <span class="corner tr"></span>
+  <span class="corner bl"></span>
+  <span class="corner br"></span>
+
+  <main>
+    <h1 class="brand">CANZO</h1>
+    <div class="hairline"></div>
+    <div class="status"><span class="dot"></span><span>Official Hub</span></div>
+
+    <nav id="links" aria-label="Links"></nav>
+
+    <footer>© <span id="year"></span> CANZO</footer>
+  </main>
+
+  <script>
+    // ================================================================
+    // === HIER LINKS UND NAMEN ANPASSEN ===
+    // Namen ändern: Text hinter "name:" bzw. den Link hinter "url:" überschreiben.
+    // 4. Link: eine komplette Zeile { ... }, kopieren, darunter einfügen, Name/URL/Icon ändern.
+    // Icons: "youtube", "instagram", "tiktok" oder "link"
+    // ================================================================
+    const LINKS = [
+      { name: "YouTube",   url: "https://youtube.com/@canar537?si=YqPSNxKJoZ6uZ4IC",   icon: "youtube"   },
+      { name: "Instagram", url: "https://www.instagram.com/canzo.media?srtk=Zm9yN2x5bjF5Zzls", icon: "instagram" },
+      { name: "TikTok",    url: "https://tiktok.com/@canar537", icon: "tiktok" },
+    ];
+    // ================================================================
+    // === AB HIER NICHTS MEHR ÄNDERN ===
+    // ================================================================
+
+    const ICONS = {
+      youtube:   "fa-brands fa-youtube",
+      instagram: "fa-brands fa-instagram",
+      tiktok:    "fa-brands fa-tiktok",
+      link:      "fa-solid fa-link"
+    };
+
+    const container = document.getElementById("links");
+
+    LINKS.forEach((item, i) => {
+      const a = document.createElement("a");
+      a.className = "link-btn";
+      a.href = item.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.animationDelay = (1.2 + i * 0.18) + "s";
+      a.setAttribute("aria-label", item.name);
+
+      const icon = document.createElement("i");
+      icon.className = "icon " + (ICONS[item.icon] || ICONS.link);
+
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = item.name;
+
+      const arrow = document.createElement("i");
+      arrow.className = "arrow fa-solid fa-arrow-right";
+
+      a.append(icon, label, arrow);
+      container.appendChild(a);
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
