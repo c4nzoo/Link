@@ -14,10 +14,17 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
+    /* Animierbarer Winkel für das wandernde Licht */
+    @property --angle {
+      syntax: "<angle>";
+      initial-value: 0deg;
+      inherits: false;
+    }
+
     :root {
       --bg: #07080A;
       --hair: rgba(255, 255, 255, 0.08);
-      --accent: #CFE3F2;          /* Eisblau-Platin */
+      --accent: #CFE3F2;
       --accent-soft: rgba(207, 227, 242, 0.14);
       --text: #E9EDF1;
       --muted: rgba(233, 237, 241, 0.45);
@@ -25,7 +32,6 @@
     }
 
     * { -webkit-tap-highlight-color: transparent; }
-
     html, body { height: 100%; }
 
     body {
@@ -67,16 +73,14 @@
               mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
     }
 
-    /* Rahmen-Ecken (HUD) */
+    /* HUD-Ecken */
     .corner {
       position: fixed;
       width: 22px;
       height: 22px;
       z-index: 1;
       pointer-events: none;
-      border-color: rgba(255,255,255,0.14);
-      border-style: solid;
-      border-width: 0;
+      border: 0 solid rgba(255,255,255,0.14);
     }
     .corner.tl { top: calc(18px + env(safe-area-inset-top, 0px)); left: 18px; border-top-width: 1px; border-left-width: 1px; }
     .corner.tr { top: calc(18px + env(safe-area-inset-top, 0px)); right: 18px; border-top-width: 1px; border-right-width: 1px; }
@@ -101,7 +105,7 @@
       font-weight: 300;
       font-size: clamp(2.4rem, 11vw, 3.9rem);
       letter-spacing: 0.55em;
-      margin: 0 -0.55em 0 0;   /* gleicht den Buchstabenabstand am Ende aus -> optisch zentriert */
+      margin: 0 -0.55em 0 0;
       color: var(--text);
       text-shadow: 0 0 40px rgba(207, 227, 242, 0.12);
       animation: reveal 2.2s var(--ease) both;
@@ -187,7 +191,7 @@
       animation: fade 1.4s var(--ease) forwards;
     }
 
-    /* Lichtreflex */
+    /* Hover-Lichtreflex */
     .link-btn::before {
       content: "";
       position: absolute;
@@ -201,6 +205,36 @@
       transition: left 1.1s var(--ease);
       pointer-events: none;
     }
+
+    /* PERMANENT: wanderndes, leicht pulsierendes Licht um den Rahmen */
+    .link-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 1px;                 /* Dicke der Lichtlinie */
+      border-radius: inherit;
+      z-index: 2;
+      pointer-events: none;
+      background: conic-gradient(
+        from var(--angle),
+        transparent 0%,
+        transparent 62%,
+        rgba(255, 255, 255, 0.10) 76%,
+        rgba(255, 255, 255, 0.55) 88%,
+        rgba(255, 255, 255, 0.10) 96%,
+        transparent 100%
+      );
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+              mask-composite: exclude;
+      animation:
+        orbit 4.8s linear infinite,
+        breathe 4.8s ease-in-out infinite;
+      animation-delay: var(--orbit-delay, 0s);
+    }
+    @keyframes orbit   { to { --angle: 360deg; } }
+    @keyframes breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 
     .link-btn .icon {
       width: 22px;
@@ -226,7 +260,7 @@
     @media (hover: hover) {
       .link-btn:hover {
         transform: translateY(-2px);
-        border-color: rgba(207, 227, 242, 0.3);
+        border-color: rgba(207, 227, 242, 0.28);
         background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.02));
         box-shadow: 0 18px 40px -20px rgba(0,0,0,1), 0 0 0 1px var(--accent-soft), inset 0 1px 0 rgba(255,255,255,0.06);
       }
@@ -236,7 +270,7 @@
     .link-btn:active,
     .link-btn:focus-visible {
       transform: translateY(-2px);
-      border-color: rgba(207, 227, 242, 0.3);
+      border-color: rgba(207, 227, 242, 0.28);
       outline: none;
     }
     .link-btn:active::before,
@@ -283,21 +317,6 @@
   </main>
 
   <script>
-    // ================================================================
-    // === HIER LINKS UND NAMEN ANPASSEN ===
-    // Namen ändern: Text hinter "name:" bzw. den Link hinter "url:" überschreiben.
-    // 4. Link: eine komplette Zeile { ... }, kopieren, darunter einfügen, Name/URL/Icon ändern.
-    // Icons: "youtube", "instagram", "tiktok" oder "link"
-    // ================================================================
-    const LINKS = [
-      { name: "YouTube",   url: "https://youtube.com/@canar537?si=YqPSNxKJoZ6uZ4IC",   icon: "youtube"   },
-      { name: "Instagram", url: "https://www.instagram.com/canzo.media?srtk=Zm9yN2x5bjF5Zzls", icon: "instagram" },
-      { name: "TikTok",    url: "https://tiktok.com/@canar537", icon: "tiktok" },
-    ];
-    // ================================================================
-    // === AB HIER NICHTS MEHR ÄNDERN ===
-    // ================================================================
-
     const ICONS = {
       youtube:   "fa-brands fa-youtube",
       instagram: "fa-brands fa-instagram",
@@ -305,32 +324,51 @@
       link:      "fa-solid fa-link"
     };
 
-    const container = document.getElementById("links");
+    function render(links) {
+      const container = document.getElementById("links");
 
-    LINKS.forEach((item, i) => {
-      const a = document.createElement("a");
-      a.className = "link-btn";
-      a.href = item.url;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.style.animationDelay = (1.2 + i * 0.18) + "s";
-      a.setAttribute("aria-label", item.name);
+      links.forEach((item, i) => {
+        const a = document.createElement("a");
+        a.className = "link-btn";
+        a.href = item.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.setAttribute("aria-label", item.name);
+        a.style.animationDelay = (1.2 + i * 0.18) + "s";
+        // Zeitversetztes Rahmenlicht pro Button (organischer Look)
+        a.style.setProperty("--orbit-delay", (-i * 1.6) + "s");
 
-      const icon = document.createElement("i");
-      icon.className = "icon " + (ICONS[item.icon] || ICONS.link);
+        const icon = document.createElement("i");
+        icon.className = "icon " + (ICONS[item.icon] || ICONS.link);
 
-      const label = document.createElement("span");
-      label.className = "label";
-      label.textContent = item.name;
+        const label = document.createElement("span");
+        label.className = "label";
+        label.textContent = item.name;
 
-      const arrow = document.createElement("i");
-      arrow.className = "arrow fa-solid fa-arrow-right";
+        const arrow = document.createElement("i");
+        arrow.className = "arrow fa-solid fa-arrow-right";
 
-      a.append(icon, label, arrow);
-      container.appendChild(a);
-    });
+        a.append(icon, label, arrow);
+        container.appendChild(a);
+      });
 
-    document.getElementById("year").textContent = new Date().getFullYear();
+      document.getElementById("year").textContent = new Date().getFullYear();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => render(LINKS));
+
+    // ================================================================
+    // === HIER LINKS UND NAMEN ANPASSEN ===
+    // Namen ändern: Text hinter "name:" bzw. Link hinter "url:" überschreiben.
+    // 4. Link: eine komplette Zeile { ... }, kopieren, darunter einfügen und anpassen.
+    // Icons: "youtube", "instagram", "tiktok" oder "link"
+    // ================================================================
+    const LINKS = [
+      { name: "YouTube",   url: "https://youtube.com/@canar537?si=jlMNd927275u336C",         icon: "youtube"   },
+      { name: "Instagram", url: "https://www.instagram.com/canzo.media?cplk=Zm9yN2x5bjF5Zzls",       icon: "instagram" },
+      { name: "TikTok",    url: "https://tiktok.com/@canar537", icon: "tiktok"    },
+    ];
+    // ================================================================
   </script>
 </body>
 </html>
