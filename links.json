@@ -1,0 +1,12 @@
+{
+ "art": "CNZ-Links",
+ "stand": "2026-11-26T00:00:00.000Z",
+ "logoText": "CNZ",
+ "logoBild": "",
+ "status": "Official Hub",
+ "links": [
+  { "aktiv": true, "name": "YouTube",   "url": "https://youtube.com/",         "icon": "youtube" },
+  { "aktiv": true, "name": "Instagram", "url": "https://instagram.com/canzo.media", "icon": "instagram" },
+  { "aktiv": true, "name": "TikTok",    "url": "https://tiktok.com/@canar537", "icon": "tiktok" }
+ ]
+}

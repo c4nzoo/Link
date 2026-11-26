@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code ändern – CNZ</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#07080A;color:#E9EDF1;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;padding:20px}
+  .box{width:100%;max-width:420px;border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:24px;background:rgba(255,255,255,.03)}
+  h1{margin:0 0 6px;font-size:1.3rem}
+  p{color:rgba(233,237,241,.6);font-size:.92rem;line-height:1.45;margin:6px 0 14px}
+  label{display:block;font-weight:600;margin:14px 0 4px}
+  input{width:100%;padding:12px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.05);color:#fff;font:inherit;font-size:18px;letter-spacing:.2em}
+  button{margin-top:18px;width:100%;padding:13px;border:0;border-radius:12px;background:#CFE3F2;color:#0A0C10;font:inherit;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.5}
+  .fehler{color:#EE8C8C;min-height:22px;margin-top:10px;font-size:.9rem}
+  .ok{color:#8FD3B0;font-weight:600;margin-top:14px}
+  .schritte{margin:10px 0 0;padding-left:20px;color:rgba(233,237,241,.8);font-size:.92rem;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Neuen Code festlegen</h1>
+  <p>6 bis 12 Ziffern. Etwas, das du dir merken kannst, aber das kein anderer errät – kein Geburtstag, nicht 123456.</p>
+  <label for="a">Neuer Code</label>
+  <input id="a" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+  <label for="b">Noch einmal</label>
+  <input id="b" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+  <div class="fehler" id="f"></div>
+  <button id="go">Neue pin.js erstellen</button>
+  <div id="fertig" style="display:none">
+    <div class="ok">✓ Fertig – die Datei pin.js wurde heruntergeladen.</div>
+    <ol class="schritte">
+      <li>Im GitHub-Ordner die alte <b>pin.js</b> durch die neue ersetzen (hochladen, gleicher Name).</li>
+      <li>Nach 1–5 Minuten gilt der neue Code.</li>
+    </ol>
+  </div>
+</div>
+<script src="links.js?v=1"></script>
+<script>
+const $ = id => document.getElementById(id);
+$("go").addEventListener("click", () => {
+  const a = $("a").value, b = $("b").value;
+  if (!/^\d{6,12}$/.test(a)) return $("f").textContent = "Bitte 6 bis 12 Ziffern eingeben.";
+  if (/^(\d)\1+$/.test(a) || "0123456789012345".includes(a) || "9876543210987654".includes(a)) return $("f").textContent = "Das ist zu leicht zu erraten (z. B. 111111 oder 123456).";
+  if (a !== b) return $("f").textContent = "Die beiden Eingaben sind nicht gleich.";
+  $("f").textContent = "";
+  const salz = Array.from(crypto.getRandomValues(new Uint8Array(8)), x => x.toString(16).padStart(2, "0")).join("");
+  const hash = passwortHash(a, salz);
+  const text = `/* Zugangs-Code für die Bearbeitungsebene (nur unkenntlich gemacht, nicht im Klartext).
+   Neuen Code festlegen: Datei pin-aendern.html öffnen, Code eingeben, neue pin.js herunterladen
+   und hier im GitHub-Ordner ersetzen. */
+const PIN_CONFIG = {
+  salz: "${salz}",
+  hash: "${hash}"
+};
+`;
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([text], { type:"text/javascript" }));
+  link.download = "pin.js"; document.body.appendChild(link); link.click(); link.remove();
+  $("a").value = $("b").value = ""; $("fertig").style.display = "block";
+});
+</script>
+</body>
+</html>
